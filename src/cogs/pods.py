@@ -105,7 +105,15 @@ class Pods(commands.Cog, name="Pods"):
             await GQLService.record_pod_on_team_metadata(showcase_team["id"], str(current_pod.id))
 
             tc = await bot.fetch_channel(int(current_pod.tc_id))
-            await tc.send("Team " + showcase_team["name"] + " has joined the pod!")
+            member_mentions=[]
+            for showcase_member in showcase_team["members"]:
+                member_mentions.append(f"<@{showcase_member['account']['discordId']}>")
+            embed = discord.Embed(title=f"Team {showcase_team['name']} has joined the pod!",
+                                  url=f"https://showcase.codeday.org/project/{team_id}", color=0xff6766)
+            embed.add_field(name=f"Team member(s): {', '.join(member_mentions)}", value="", inline=False)
+            initial_message = await tc.send(embed=embed)
+            # store initial message in gql
+            # await tc.send("Team " + showcase_team["name"] + " has joined the pod!")
             # Add all members to text channel
             print(showcase_team["members"])
             guild: discord.Guild = await bot.fetch_guild(689213562740277361)
@@ -129,6 +137,7 @@ class Pods(commands.Cog, name="Pods"):
         guild: discord.Guild = await bot.fetch_guild(689213562740277361)
         showcase_team = await GQLService.get_showcase_team_by_showcase_user(member_with_project["username"])
 
+
         for team in showcase_team:
             pod = PodService.get_pod_by_id(team["pod"], session)
             try:
@@ -139,6 +148,13 @@ class Pods(commands.Cog, name="Pods"):
                 await tc.set_permissions(member, read_messages=True, read_message_history=True,
                                          send_messages=True, embed_links=True, attach_files=True,
                                          external_emojis=True, add_reactions=True)
+                embed = discord.Embed(
+                    title=f"{member_with_project['account']['name']}joined team {showcase_team['name']} joined team {showcase_team['name']}",
+                    url=f"https://showcase.codeday.org/project/{showcase_team['id']}",
+                    color=0xff6766)
+                embed.add_field(name="Member: ", value=f"<@{member_with_project['account']['discordId']}>", inline=False)
+                # Put something here that links back to initialDiscordMessage and edits it to add new member
+                await tc.send(embed=embed)
             except discord.errors.NotFound:
                 print("A user was not found within the server")
             except:

@@ -33,6 +33,7 @@ class GQLService:
                     members {
                         username
                         account {
+                            name
                             discordId
                         }
                     }
